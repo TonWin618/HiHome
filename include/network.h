@@ -11,7 +11,7 @@ private:
     String _password;
 public:
     WiFiClient client;
-	void init();
+	bool init();
     void set(String ssid, String password);
 };
 

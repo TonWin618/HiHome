@@ -17,16 +17,22 @@ struct Node{
     BLEAdvertisedDevice* pDevice;
 };
 Node nodes[MAX_CONNECT_NUM];
-
 static BLEScan* pBLEScan;
 static BLEUUID curSvrUUID;
 static BLEUUID curCharUUID;
-
 uint8_t nodeIndex = 0;
 uint8_t nodeCount = 0;
 uint8_t connectedCount = 0;
 bool doConnect = false;
 
+/**
+ * @brief 通知回调函数
+ * 
+ * @param pBLERemoteCharacteristic 消息来源特征
+ * @param pData 传来的消息数据
+ * @param length 消息长度
+ * @param isNotify 是否通知
+ */
 static void notifyCallback(
   BLERemoteCharacteristic* pBLERemoteCharacteristic,
   uint8_t* pData,
@@ -43,6 +49,10 @@ static void notifyCallback(
     mqtt.broadcast(id,(char*)pData);
 }
 
+/**
+ * @brief 蓝牙事件回调函数
+ * 
+ */
 class MyClientCallback : public BLEClientCallbacks {
   void onConnect(BLEClient* pclient) {
   }
@@ -53,6 +63,12 @@ class MyClientCallback : public BLEClientCallbacks {
   }
 };
 
+/**
+ * @brief 连接到一个BLE服务器节点
+ * 
+ * @return true 连接成功
+ * @return false 连接失败
+ */
 bool connectToServer() {
     doConnect = false;
     Serial.print("Forming a connection to ");
@@ -98,6 +114,10 @@ bool connectToServer() {
     return true;
 }
 
+/**
+ * @brief 蓝牙扫描回调函数
+ * 
+ */
 class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
   void onResult(BLEAdvertisedDevice advertisedDevice) {
     Serial.print("BLE Advertised Device found: ");
@@ -120,6 +140,10 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
   }
 };
 
+/**
+ * @brief 初始化低功耗蓝牙模块
+ * 
+ */
 void BLE::init(){
   Serial.println("Starting Arduino BLE Client application...");
   BLEDevice::init("Hi-Gateway");
@@ -142,6 +166,14 @@ void BLE::sendMsg(int id, const char* data){
   }
 }
 
+/**
+ * @brief 添加一个节点
+ * 
+ * @param id 设备id
+ * @param name 设备名称，默认为蓝牙名称
+ * @param svrUUID 服务UUID
+ * @param charUUID 特征UUID
+ */
 void BLE::addNode(int id, const char* name, const char* svrUUID, const char* charUUID){
   nodes[nodeCount].id = id;
   strcpy(nodes[nodeCount].name,name);
@@ -152,6 +184,10 @@ void BLE::addNode(int id, const char* name, const char* svrUUID, const char* cha
   Serial.println("add a new node");
 }
 
+/**
+ * @brief 蓝牙循环检测是否有设备
+ * 
+ */
 void BLE::loop(){
   if(doConnect){
     connectToServer();
