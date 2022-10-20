@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+   <title>Hi网关</title>
+   <meta charset="utf-8">
+   <style>
+        .app{
+            margin-top: 10px;
+        }
+        input{
+            width: 200px;
+            height: 20px;
+            font-size: 16px;
+        }
+        button{
+            width: 100px;
+            height: 30px;
+            font-size: 16px;
+        }
+   </style>
+</head>
+
+<body>
+    <div id="app">
+        <div>
+            <label>wifi配置</label>
+            <input v-model="gateway.wifi_name" placeholder="wifi名称"/>
+            <input v-model="gateway.wifi_password" placeholder="wifi密码"/>
+        </div>
+        <div>
+            <label>蓝牙配置</label>
+            <input v-model="gateway.bt_name" placeholder="蓝牙名称"/>
+            <input v-model="gateway.bt_password" placeholder="蓝牙密码"/>
+        </div>
+        <button @click="setConf">修改</button>
+    </div>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp } = Vue
+        createApp({
+            data() {
+                return {
+                    gateway : {
+                        wifi_name:'',
+                        wifi_password:'',
+                        bt_name:'',
+                        bt_password:''
+                    }
+                }
+            },
+            methods:{
+                sendMsg(type,data){
+                    window.parent.postMessage({
+                        type: type,
+                        data: data
+                    }, '*');
+                },
+                listenMsg(data){
+                    //此处处理接收的关于该设备的数据
+                    if(data.action === "showConf"){
+                        this.showConf(data);
+                    }
+                },
+                getConf(){
+                    this.sendMsg("publish",{
+                        action:"getConf"
+                    })
+                },
+                showConf(data){
+                    this.gateway.wifi_name = data.wifi_name,
+                    this.gateway.wifi_password = data.wifi_password,
+                    this.gateway.bt_name = data.bt_name,
+                    this.gateway.bt_password = data.bt_password
+                },
+                setConf(){
+                    console.log(this.gateway)
+                    const {wifi_name,wifi_password,bt_name,bt_password} = this.gateway
+                    this.sendMsg("publish",{
+                        action:"setConf",
+                        wifi_name,
+                        wifi_password,
+                        bt_name,
+                        bt_password
+                    })
+                },
+            },
+            mounted(){
+                window.addEventListener("message",(event)=>{
+                    this.listenMsg(event.data)
+                })
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>

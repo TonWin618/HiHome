@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+   <title>Hi台灯</title>
+   <meta charset="utf-8">
+   <style>
+    button{
+        width: 100px;
+        height: 50px;
+    }
+   </style>
+</head>
+
+<body>
+    <div id="app">
+        <div>
+            <h3 v-html="lightness"></h3>
+        </div>
+        <button @click=lightSwitch("on")>开</botton>
+        
+        <button @click=lightSwitch("off")>关</botton>
+    </div>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp } = Vue
+        createApp({
+            data() {
+                return {
+                    lightness:0
+                }
+            },
+            methods:{
+                sendMsg(type,data){
+                    window.parent.postMessage({
+                        type: type,
+                        data: data
+                    }, '*');
+                },
+                listenMsg(data){
+                    //此处处理接收的关于该设备的数据
+                    this.lightness=data.lightness
+                },
+                lightSwitch(state){
+                    if(state === "on"){
+                        this.sendMsg("publish",{
+                            switch:"on"
+                        })
+                    }else{
+                        this.sendMsg("publish",{
+                            switch:"off"
+                        })
+                    }
+                },
+                setLightness(val){
+                    this.sendMsg("publish",{
+                        lightness:val
+                    })
+                }
+            },
+            mounted(){
+                window.addEventListener("message",(event)=>{
+                    this.listenMsg(event.data)
+                })
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
