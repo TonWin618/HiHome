@@ -1,45 +1,72 @@
 <template>
 
   <el-dialog v-model="addDeviceVisible" title="选择设备类型" width="70%">
-    <el-select class="type-select" v-model="deviceInfo.type_id" placeholder="未选择" size="large">
+    <el-select class="type-select" v-model="selectedType.type_id" placeholder="未选择" size="large">
       <el-option  v-for="deviceType in typeList" :key="deviceType.id" :label="deviceType.name" :value="deviceType.id"/>
     </el-select>
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="addDeviceVisible = false">取消</el-button>
-        <el-button type="primary" @click="selectGateway">确认</el-button>
+        <el-button type="primary" @click="addDeviceByType">确认</el-button>
       </span>
     </template>
   </el-dialog>
 
-  <el-dialog v-model="selectGatewayVisible" title="选择要绑定的网关" width="70%">
-    <el-select class="type-select" v-model="deviceInfo.gateway_id" placeholder="未选择" size="large">
+  <el-dialog v-model="addBleDeviceVisible" title="BLE设备" width="70%">
+    <el-select class="type-select" v-model="bleDevice.gateway_id" placeholder="未选择" size="large">
       <el-option v-for="gateway in gatewayList" :key="gateway.id" :label="gateway.name" :value="gateway.id"/>
     </el-select>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="selectGatewayVisible = false">取消</el-button>
-        <el-button type="primary" @click="configDevice">确认</el-button>
+        <el-button @click="addBleDeviceVisible = false">取消</el-button>
+        <el-button type="primary" @click="configBleDevice">确认</el-button>
       </span>
     </template>
   </el-dialog>
 
-  <el-dialog v-model="configDeviceVisible" title="输入配置信息" width="70%">
+  <el-dialog v-model="configBleDeviceVisible" title="输入配置信息" width="70%">
     <span>
-      蓝牙MAC地址：
-      <el-input class="device-input" v-model="deviceInfo.bt_mac" placeholder="请输入" size="large"/>
+      服务UUID：
+      <el-input class="device-input" v-model="bleDevice.svr_uuid" placeholder="请输入" size="large"/>
     </span>
     <span>
-      蓝牙连接密码：
-      <el-input class="device-input" v-model="deviceInfo.bt_pin" placeholder="请输入" size="large"/>
+      特征UUID：
+      <el-input class="device-input" v-model="bleDevice.char_uuid" placeholder="请输入" size="large"/>
     </span>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="configDeviceVisible = false">取消</el-button>
-        <el-button type="primary" @click="createDevice">确认</el-button>
+        <el-button @click="configBleDeviceVisible = false">取消</el-button>
+        <el-button type="primary" @click="createBleDevice">确认</el-button>
       </span>
     </template>
   </el-dialog>
+
+  <el-dialog v-model="addMqttDeviceVisible" title="MQTT设备" width="70%">
+    <h1>设备ID：{{mqttDevice.device_id}}</h1>
+    <h1>验证码：{{mqttDevice.authcode}}</h1>
+
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="addMqttDeviceVisible = false">取消</el-button>
+        <el-button type="primary" @click="">确认</el-button>
+      </span>
+    </template>
+  </el-dialog>
+
+  <el-dialog v-model="addHttpDeviceVisible" title="HTTP设备" width="70%">
+    <span>
+      HTTP链接
+      <el-input class="device-input" v-model="httpDevice.http_link" placeholder="请输入" size="large"/>
+    </span>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="addHttpDeviceVisible = false">取消</el-button>
+        <el-button type="primary" @click="configHttpDevice">确认</el-button>
+      </span>
+    </template>
+  </el-dialog>
+
+
   
 </template>
 
@@ -56,30 +83,92 @@
   const typeList = ref([])
   const gatewayList = ref([])
 
+  var selectedType = reactive({
+    type_id:null,
+    add:"",
+  })
+
   const addDeviceVisible = ref(true);
-  const selectGatewayVisible = ref(false)
-  const configDeviceVisible = ref(false)
+  const addBleDeviceVisible = ref(false)
+  const addMqttDeviceVisible = ref(false)
+  const addHttpDeviceVisible = ref(false)
+  const configBleDeviceVisible = ref(false)
   
-  const deviceInfo = reactive({
+  const bleDevice = reactive({
     type_id:null,
     gateway_id:null,
-    bt_mac: null,
-    bt_pin: null,
+    svr_uuid: null,
+    char_uuid: null,
   })
+
+  const mqttDevice = reactive({
+    type_id:null,
+    device_id: null,
+    authcode: '000000',
+  })
+
+  const httpDevice = reactive({
+    type_id:null,
+    http_link: null,
+  })
+
+  const addDeviceByType = () => {
+    for(var type of typeList.value){
+      if(type.id === selectedType.type_id){
+        selectedType.add = type.add
+        break
+      }
+    }
+
+    addDeviceVisible.value = false
+    switch(selectedType.add){
+      case "ble":
+        addBleDeviceVisible.value = true
+        break
+      case "mqtt":
+        configMqttDevice()
+        addMqttDeviceVisible.value = true
+        break
+      case "http":
+        addHttpDeviceVisible.value = true
+        break
+    }
+  }
+
+  const configBleDevice = () => {
+    
+    addBleDeviceVisible.value = false
+    configBleDeviceVisible.value = true
+  }
+
+  const createBleDevice = () => {
+  }
+
+  const configMqttDevice = () => {
+    request.post("/device",{type_id:selectedType.type_id}).then((res) => {
+      if(res.data.message === true){
+        mqttDevice.device_id = res.data.data.device_id
+        request.put("/auth/authcode").then((res) => {
+          mqttDevice.authcode = res.data.data.authcode
+        })
+      }else{
+        ElMessage({
+          message: '初始化设备失败',
+          type: 'error',
+          grouping:true
+        })
+      }
+    })
+  }
+
+  const configHttpDevice = () => {
+
+  }
 
   const addPageMethod = ()=>{
     addDeviceVisible.value = true;
   }
 
-  const selectGateway = () => {
-    getGatewayList();
-    addDeviceVisible.value = false;
-    selectGatewayVisible.value = true;
-  }
-  const configDevice = () => {
-    selectGatewayVisible.value = false;
-    configDeviceVisible.value = true;
-  }
 
   const getTypeList = () => {
     request.get("/type").then((res) => {
@@ -93,6 +182,7 @@
       gatewayList.value = res.data.data
     })
   }
+  getGatewayList()
 
   const createDevice = () => {
     request.post("/device",deviceInfo).then((res) => {

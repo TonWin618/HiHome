@@ -37,7 +37,7 @@
         username:'user',
         password:localStorage.getItem("token")
     }
-    client = mqtt.connect("ws://tonwin.work:8083/mqtt",options)
+    client = mqtt.connect("ws://127.0.0.1:8083/mqtt",options)
     const mqttMsg = () => {
         client.on("connect", (error) => {
             console.log("连接成功");
