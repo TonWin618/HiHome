@@ -18,7 +18,7 @@ private:
 public:
     PubSubClient client;
     void config(const char * broker, const char* clientid, const char * username, const char * password, const int port, Client& WiFiClient);
-    void init();
+    bool init();
     void broadcast(int id, const char* data);
 };
 

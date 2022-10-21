@@ -41,7 +41,7 @@ void callback(char *topic, byte *payload, unsigned int length) {
 }
 
 //mqtt初始化
-void MqttClient::init(){
+bool MqttClient::init(){
     client.setServer(_broker, _port);
     client.setCallback(callback);
     while (!client.connected()) {
@@ -52,8 +52,9 @@ void MqttClient::init(){
             Serial.print("failed with state ");
             Serial.print(client.state());
             delay(2000);
+            return false;
         }
     }
-    client.subscribe(_topic);
+    return true;
 }
 
