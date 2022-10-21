@@ -12,6 +12,11 @@
     import request  from '../utils/request.js'
     import mqtt from 'mqtt'
 
+    const emit = defineEmits(['sendMsgToPanel']);
+    const sendMsgToPanel = (message)=>{
+        emit("sendMsgToPanel",message);
+    }
+
     //传入选中的设备信息
     const props = defineProps({
         device:{
@@ -47,6 +52,7 @@
         });
         client.on("message", (topic, message) => {
             var msg = JSON.parse(message)
+            sendMsgToPanel(msg)
             if(msg.id === props.device.id){
                 iframeWindow.postMessage(msg.data,"*")
             }
@@ -61,6 +67,7 @@
 
     onMounted(()=>{
         mqttMsg();
+        //监听iframe页面
         window.addEventListener('message',(event) => {
             var msg =event.data
             switch(msg.type){
@@ -100,5 +107,4 @@
             
         })
     }
-
 </script>

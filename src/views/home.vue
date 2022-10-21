@@ -120,26 +120,25 @@
     </template>
   </el-drawer>
 
-  <AddDevice v-if="addPageVisible"  @refreshList="refreshList" ref="addPageRef"></AddDevice>
-  <ControlPanel v-if="controlVisible" ref="controlPanelRef" :device="currentDevice"></ControlPanel>
+  <AddDevice v-if="addPageVisible" @refreshList="refreshList" ref="addPageRef"></AddDevice>
+  <ControlPanel v-if="controlVisible" @sendMsgToPanel="sendMsgToPanel" ref="controlPanelRef" :device="currentDevice"></ControlPanel>
 
 </template>
 
-
-
 <script setup>
   import { useRouter } from 'vue-router'
-  import { reactive, ref, createApp, defineComponent } from 'vue';
-  import { ElMessage,ElMessageBox  } from 'element-plus';
-  import request  from '../utils/request.js';
-  import AddDevice from '@/components/addDevice.vue';
-  import ControlPanel from '@/components/controlPanel.vue';
+  import { reactive, ref, createApp } from 'vue'
+  import { ElMessage,ElMessageBox  } from 'element-plus'
+  import request  from '../utils/request.js'
+  import AddDevice from '@/components/addDevice.vue'
+  import ControlPanel from '@/components/controlPanel.vue'
+  import nowDate from '@/utils/date'
 
-
-  const router = useRouter();
-  const title = ref("HOME");
-  const username = ref('user');
-  username.value = localStorage.getItem("username");
+  var date = nowDate()
+  const router = useRouter()
+  const title = ref("HOME")
+  const username = ref('user')
+  username.value = localStorage.getItem("username")
   const deviceList = ref([]);
   //状态
   const state = ref("normal");
@@ -162,21 +161,29 @@
     type_id:123,
   })
 
+  const mqttmsg = reactive({})
+
   const addPageRef = ref()
   const controlPanelRef = ref()
 
   const addDevice = () => {
     addPageVisible.value = true
-    addPageRef.value.addPageMethod();
+    if(addPageRef.value)
+      addPageRef.value.addPageMethod()
   }
   const controlPanel = () => {
-    controlVisible.value = true;
-    controlPanelRef.value.setVisible();
+    controlVisible.value = true
+    controlPanelRef.value.setVisible()
   }
 
   const refreshList = (val)=>{
-    drawer.value = false;
-    getDeviceList();
+    drawer.value = false
+    getDeviceList()
+  }
+
+  const sendMsgToPanel = (message)=>{
+    if(addPageRef.value)
+      addPageRef.value.mhs(message)
   }
 
   const clickEvent = (device) => {
@@ -196,7 +203,6 @@
     }
   }
   
-
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("username");
@@ -227,8 +233,10 @@
     request.get("/device").then((res) => {
       deviceList.value = res.data.data;
     })
-  };
-  getDeviceList();
+  }
+
+  getDeviceList()
+
   const destroyDevice = (device_id) => {
     ElMessageBox.confirm(
       '该操作将删除设备，确定要继续吗',
@@ -271,27 +279,7 @@
     .catch(() => {
 
     })
-    
   }
-  
-  var date = reactive({
-    month:'0',
-    date:'0',
-    day:'0'
-  })
-  var chineseWeek = ["日","一","二","三","四","五","六"]
-  date = nowDate()
-	function nowDate() {
-    var now = new Date()
-		var day = chineseWeek[now.getDay()]; //星期
-		var month = now.getMonth() + 1; //月份
-		var date = now.getDate(); //天数
-		return ({
-      month:month,
-      date:date,
-      day:day,
-    })
-	};
 </script>
 
 <style>
