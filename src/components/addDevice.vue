@@ -1,4 +1,5 @@
 <template>
+
   <el-dialog v-model="addDeviceVisible" title="选择设备类型" width="70%">
     <el-select class="type-select" v-model="deviceInfo.type_id" placeholder="未选择" size="large">
       <el-option  v-for="deviceType in typeList" :key="deviceType.id" :label="deviceType.name" :value="deviceType.id"/>
@@ -39,6 +40,7 @@
       </span>
     </template>
   </el-dialog>
+  
 </template>
 
 <script setup>
