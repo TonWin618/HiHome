@@ -10,14 +10,18 @@
 <script setup>
     import { ref,reactive,onMounted  } from 'vue'
     import request  from '../utils/request.js'
-    import mqtt from 'mqtt'
 
-    const emit = defineEmits(['sendMsgToPanel']);
-    const sendMsgToPanel = (message)=>{
-        emit("sendMsgToPanel",message);
+    var iframeRef = ref(null)
+    var iframeWindow = null
+
+    const loadEvent = () => {
+        iframeWindow = iframeRef.value.contentWindow
+    }
+    const emit = defineEmits(['mqttBroadcast']);
+    const publish = (data)=>{
+        emit("mqttBroadcast",props.device.id,data)
     }
 
-    //传入选中的设备信息
     const props = defineProps({
         device:{
             type: Object,
@@ -30,46 +34,18 @@
     const setVisible = () => {
         visible.value = true;
     }
-    defineExpose({setVisible});
-    //
-    var iframeRef = ref(null)
-    var iframeWindow = null
-    var client
-    const options = {
-        connectTimeout:4000,
-        clientId:'user'+localStorage.getItem("id"),
-        clean: true,
-        username:'user',
-        password:localStorage.getItem("token")
+    const mhs = (msg) => {
+        console.log("control panel received")
+        if(msg.id === props.device.id){
+            iframeWindow.postMessage(msg.data,"*")
+        }
     }
-    client = mqtt.connect("ws://127.0.0.1:8083/mqtt",options)
-    const mqttMsg = () => {
-        client.on("connect", (error) => {
-            console.log("连接成功");
-            client.subscribe(localStorage.getItem('id'), { qos: 0 }, (error) => {
-                
-            });
-        });
-        client.on("message", (topic, message) => {
-            var msg = JSON.parse(message)
-            sendMsgToPanel(msg)
-            if(msg.id === props.device.id){
-                iframeWindow.postMessage(msg.data,"*")
-            }
-        });
-        client.on("reconnect", (error) => {
-            console.log("正在重连", error);
-        });
-        client.on("error", (error) => {
-            console.log("连接失败", error);
-        });
-    }
+    defineExpose({setVisible,mhs});
 
     onMounted(()=>{
-        mqttMsg();
         //监听iframe页面
         window.addEventListener('message',(event) => {
-            var msg =event.data
+            var msg = event.data
             switch(msg.type){
                 case "publish" : {
                     publish(msg.data)
@@ -90,21 +66,4 @@
             }
         })
     })
-
-    const loadEvent = () => {
-        iframeWindow = iframeRef.value.contentWindow
-    }
-
-
-    const publish = (data)=>{
-        var msg = {
-            id:props.device.id,
-            data:data
-        }
-        client.publish(localStorage.getItem('id'),JSON.stringify(msg),{
-            qos:0, rein: false
-        },(error)=>{
-            
-        })
-    }
 </script>

@@ -21,7 +21,7 @@
   </div>
 
   <div class="back-hover" v-show="hoverVisible">
-    <el-button class="back-button" type="primary" circle size="large" @click="backNormal">
+    <el-button  class="back-button" type="primary" circle size="large" @click="backNormal">
         <el-icon size="30">
             <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" data-v-029747aa="">
                 <path fill="currentColor" d="M224 480h640a32 32 0 1 1 0 64H224a32 32 0 0 1 0-64z"></path>
@@ -120,19 +120,20 @@
     </template>
   </el-drawer>
 
-  <AddDevice v-if="addPageVisible" @refreshList="refreshList" ref="addPageRef"></AddDevice>
-  <ControlPanel v-if="controlVisible" @sendMsgToPanel="sendMsgToPanel" ref="controlPanelRef" :device="currentDevice"></ControlPanel>
+  <AddDevice v-if="addPageVisible" @refreshList="refreshList" @mqttBroadcast="mqttBroadcast" ref="addPageRef"></AddDevice>
+  <ControlPanel v-if="controlVisible" @mqttBroadcast="mqttBroadcast" ref="controlPanelRef" :device="currentDevice"></ControlPanel>
 
 </template>
 
 <script setup>
   import { useRouter } from 'vue-router'
-  import { reactive, ref, createApp } from 'vue'
+  import { reactive, ref, createApp,onMounted } from 'vue'
   import { ElMessage,ElMessageBox  } from 'element-plus'
   import request  from '../utils/request.js'
   import AddDevice from '@/components/addDevice.vue'
   import ControlPanel from '@/components/controlPanel.vue'
   import nowDate from '@/utils/date'
+  import mqtt from 'mqtt'
 
   var date = nowDate()
   const router = useRouter()
@@ -142,7 +143,7 @@
   const deviceList = ref([]);
   //状态
   const state = ref("normal");
-  const state_color = ref("#2BF41A")//#BFC2BF
+  const state_color = ref("#BFC2BF")//#BFC2BF,#2BF41A
   //显示控制
   const drawer = ref(false);
   const addPageVisible = ref(false)
@@ -161,10 +162,57 @@
     type_id:123,
   })
 
-  const mqttmsg = reactive({})
-
   const addPageRef = ref()
   const controlPanelRef = ref()
+
+  var client
+  const options = {
+      connectTimeout:4000,
+      clientId:'user'+localStorage.getItem("id"),
+      clean: true,
+      username:'user',
+      password:localStorage.getItem("token")
+  }
+  client = mqtt.connect("ws://127.0.0.1:8083/mqtt",options)
+
+  const mqttMsg = () => {
+      client.on("connect", (error) => {
+          console.log("连接成功");
+          client.subscribe(localStorage.getItem('id'), { qos: 0 }, (error) => {
+              
+          })
+      })
+      client.on("message", (topic, message) => {
+          var msg = JSON.parse(message)
+          switch(msg.data.response){
+            case "device_status":
+              console.log("device_status")
+              break
+            case "ble_tryconnect":
+            case "ble_add":
+            case "mqtt_add":
+              if(addPageRef.value)
+                addPageRef.value.mhs(msg)
+              break
+            case "device_delete":
+              console.log("device_delete")
+              break
+            default:
+              controlPanelRef.value.mhs(msg)
+              break
+          }
+      })
+      client.on("reconnect", (error) => {
+          console.log("正在重连", error)
+      })
+      client.on("error", (error) => {
+          console.log("连接失败", error)
+      })
+  }
+
+  onMounted(()=>{
+      mqttMsg();
+  })
 
   const addDevice = () => {
     addPageVisible.value = true
@@ -181,9 +229,16 @@
     getDeviceList()
   }
 
-  const sendMsgToPanel = (message)=>{
-    if(addPageRef.value)
-      addPageRef.value.mhs(message)
+  const mqttBroadcast = (id,data)=>{
+    var msg = {
+      id:id,
+      data:data
+    }
+    client.publish(localStorage.getItem('id'),JSON.stringify(msg),{
+        qos:0, rein: false
+    },(error)=>{
+        
+    })
   }
 
   const clickEvent = (device) => {

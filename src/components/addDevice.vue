@@ -1,4 +1,5 @@
 <template>
+  
   <el-dialog v-model="addDeviceVisible" title="选择设备类型" width="70%">
     <el-select class="type-select" v-model="selectedType.type_id" placeholder="未选择" size="large">
       <el-option  v-for="deviceType in typeList" :key="deviceType.id" :label="deviceType.name" :value="deviceType.id"/>
@@ -11,7 +12,7 @@
     </template>
   </el-dialog>
 
-  <el-dialog v-model="addBleDeviceVisible" title="BLE设备" width="70%">
+  <el-dialog v-model="addBleDeviceVisible"  class="myclass" title="BLE设备" width="70%">
     <el-select class="type-select" v-model="bleDevice.gateway_id" placeholder="未选择" size="large">
       <el-option v-for="gateway in gatewayList" :key="gateway.id" :label="gateway.name" :value="gateway.id"/>
     </el-select>
@@ -22,7 +23,7 @@
       </span>
     </template>
   </el-dialog>
-
+  
   <el-dialog v-model="configBleDeviceVisible" title="输入配置信息" width="70%">
     <span>
       服务UUID：
@@ -65,18 +66,20 @@
     </template>
   </el-dialog>
 
-
-  
 </template>
 
 <script setup>
-  import { ref,reactive } from "vue";
+  import { ref,reactive,nextTick } from "vue";
   import request  from '../utils/request.js';
-  import { ElMessage,ElMessageBox  } from 'element-plus';
+  import { ElMessage,ElMessageBox   } from 'element-plus';
 
-  const emit = defineEmits(['refreshList']);
+  const emit = defineEmits(['refreshList','mqttBroadcast']);
   const refresh = ()=>{
     emit("refreshList",'1');
+  }
+
+  const publish = (id,data)=>{
+      emit("mqttBroadcast",id,data)
   }
 
   const typeList = ref([])
@@ -95,6 +98,7 @@
   
   const bleDevice = reactive({
     type_id:null,
+    device_id:null,
     gateway_id:null,
     svr_uuid: null,
     char_uuid: null,
@@ -135,19 +139,23 @@
   }
 
   const configBleDevice = () => {
-    
     addBleDeviceVisible.value = false
     configBleDeviceVisible.value = true
   }
 
   const createBleDevice = () => {
+    publish(bleDevice.gateway_id,{
+      request:"ble_tryconnect",
+      svr_uuid: bleDevice.svr_uuid,
+      char_uuid: bleDevice.char_uuid
+    })
   }
 
   const configMqttDevice = () => {
     request.post("/device",{type_id:selectedType.type_id}).then((res) => {
       if(res.data.message === true){
         mqttDevice.device_id = res.data.data.device_id
-        request.put("/auth/authcode").then((res) => {
+        request.put("/auth/authcode",{device_id:mqttDevice.device_id}).then((res) => {
           mqttDevice.authcode = res.data.data.authcode
         })
       }else{
@@ -169,6 +177,55 @@
   }
 
   const mhs = (msg) =>{
+    switch(msg.data.response){
+      case "ble_tryconnect":
+        if(msg.data.return === "true"){
+          request.post("/device",{type_id:selectedType.type_id}).then((res) => {
+            if(res.data.message === true){
+              bleDevice.device_id = res.data.data.device_id
+              publish(bleDevice.gateway_id,{
+                request:"ble_add",
+                id:bleDevice.device_id,
+                svr_uuid:bleDevice.svr_uuid,
+                char_uuid:bleDevice.char_uuid
+              })
+            }else{
+              return false
+            }
+          })
+        }
+        break
+      case "ble_add":
+        if(msg.data.return === "true"){
+          ElMessage({
+            message: '添加成功',
+            type: 'success',
+            grouping:true
+          })
+        }else{
+          ElMessage({
+            message: '添加失败',
+            type: 'error',
+            grouping:true
+          })
+        }
+        break
+      case "mqtt_add":
+        if(msg.data.return === "true"){
+          ElMessage({
+            message: '添加成功',
+            type: 'success',
+            grouping:true
+          })
+        }else{
+          ElMessage({
+            message: '添加失败',
+            type: 'error',
+            grouping:true
+          })
+        }
+        break
+    }
     console.log(msg)
   }
 
@@ -186,22 +243,23 @@
   }
   getGatewayList()
 
-  const createDevice = () => {
-    request.post("/device",deviceInfo).then((res) => {
+  const createDevice = (type_id) => {
+    request.post("/device",{type_id}).then((res) => {
       if(res.data.message === true){
         ElMessage({
           message: '添加成功',
           type: 'success',
           grouping:true
         })
-        configDeviceVisible.value = false;
         refresh();
+        return res.data.data.device_id
       }else{
         ElMessage({
           message: '添加失败',
           type: 'error',
           grouping:true
         })
+        return false
       }
     })
   }
