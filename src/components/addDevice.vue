@@ -111,7 +111,8 @@
   })
 
   const httpDevice = reactive({
-    type_id:null,
+    type_id: null,
+    device_id: null,
     http_link: null,
   })
 
@@ -169,7 +170,7 @@
   }
 
   const configHttpDevice = () => {
-
+    
   }
 
   const addPageMethod = ()=>{
