@@ -48,7 +48,7 @@
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="addMqttDeviceVisible = false">取消</el-button>
-        <el-button type="primary" @click="">确认</el-button>
+        <el-button type="primary" @click="setMqttDevice">确认</el-button>
       </span>
     </template>
   </el-dialog>
@@ -69,9 +69,9 @@
 </template>
 
 <script setup>
-  import { ref,reactive,nextTick } from "vue";
+  import { ref,reactive } from "vue";
   import request  from '../utils/request.js';
-  import { ElMessage,ElMessageBox   } from 'element-plus';
+  import { ElMessage   } from 'element-plus';
 
   const emit = defineEmits(['refreshList','mqttBroadcast']);
   const refresh = ()=>{
@@ -112,7 +112,6 @@
 
   const httpDevice = reactive({
     type_id: null,
-    device_id: null,
     http_link: null,
   })
 
@@ -127,13 +126,17 @@
     addDeviceVisible.value = false
     switch(selectedType.add){
       case "ble":
+        getGatewayList()
+        bleDevice.type_id = selectedType.type_id
         addBleDeviceVisible.value = true
         break
       case "mqtt":
         configMqttDevice()
+        mqttDevice.type_id = selectedType.type_id
         addMqttDeviceVisible.value = true
         break
       case "http":
+        httpDevice.type_id = selectedType.type_id
         addHttpDeviceVisible.value = true
         break
     }
@@ -153,34 +156,31 @@
   }
 
   const configMqttDevice = () => {
-    request.post("/device",{type_id:selectedType.type_id}).then((res) => {
+    request.get("/auth/authcode").then((res) => {
+      mqttDevice.authcode = res.data.data.authcode
+    }).catch((error) => {
+      ElMessage({
+        message: '验证码获取失败',
+        type: 'error',
+        grouping:true
+      })
+    })
+  }
+
+  const setMqttDevice = () => {
+    request.post("/auth/authcode", {type_id: mqttDevice.type_id}).then((res)=>{
       if(res.data.message === true){
-        mqttDevice.device_id = res.data.data.device_id
-        request.put("/auth/authcode",{device_id:mqttDevice.device_id}).then((res) => {
-          mqttDevice.authcode = res.data.data.authcode
-        })
-      }else{
-        ElMessage({
-          message: '初始化设备失败',
-          type: 'error',
-          grouping:true
+        const device_id  = res.data.data.device_id
+        publish(0,{
+          request: "mqtt_add",
+          id:device_id
         })
       }
     })
   }
 
-  const configHttpDevice = () => {
-    
-  }
-
-  const addPageMethod = ()=>{
-    addDeviceVisible.value = true;
-  }
-
-  const mhs = (msg) =>{
-    switch(msg.data.response){
-      case "ble_tryconnect":
-        if(msg.data.return === "true"){
+  const returnBleTryconnect = (msg) => {
+    if(msg.data.return === "true"){
           request.post("/device",{type_id:selectedType.type_id}).then((res) => {
             if(res.data.message === true){
               bleDevice.device_id = res.data.data.device_id
@@ -195,36 +195,60 @@
             }
           })
         }
+  }
+
+  const returnMqttAdd = (msg) =>{
+    if(msg.data.return === "true"){
+      ElMessage({
+        message: '添加成功',
+        type: 'success',
+        grouping:true
+      })
+      refresh()
+    }else{
+      ElMessage({
+        message: '添加失败',
+        type: 'error',
+        grouping:true
+      })
+    }
+  }
+
+  const returnBleAdd = (msg) => {
+    if(msg.data.return === "true"){
+      ElMessage({
+        message: '添加成功',
+        type: 'success',
+        grouping:true
+      })
+      refresh()
+    }else{
+      ElMessage({
+        message: '添加失败',
+        type: 'error',
+        grouping:true
+      })
+    }
+  }
+
+  const configHttpDevice = () => {
+    request.post("/httplink", {})
+  }
+
+  const addPageMethod = ()=>{
+    addDeviceVisible.value = true;
+  }
+
+  const mhs = (msg) =>{
+    switch(msg.data.response){
+      case "ble_tryconnect":
+        returnBleTryconnect(msg)
         break
       case "ble_add":
-        if(msg.data.return === "true"){
-          ElMessage({
-            message: '添加成功',
-            type: 'success',
-            grouping:true
-          })
-        }else{
-          ElMessage({
-            message: '添加失败',
-            type: 'error',
-            grouping:true
-          })
-        }
+      returnBleAdd(msg)
         break
       case "mqtt_add":
-        if(msg.data.return === "true"){
-          ElMessage({
-            message: '添加成功',
-            type: 'success',
-            grouping:true
-          })
-        }else{
-          ElMessage({
-            message: '添加失败',
-            type: 'error',
-            grouping:true
-          })
-        }
+        returnMqttAdd(msg)
         break
     }
     console.log(msg)
@@ -235,37 +259,20 @@
       typeList.value = res.data.data
     })
   }
-  getTypeList();
+  
 
   const getGatewayList = () => {
     request.get("/device").then((res) => {
-      gatewayList.value = res.data.data
-    })
-  }
-  getGatewayList()
-
-  const createDevice = (type_id) => {
-    request.post("/device",{type_id}).then((res) => {
-      if(res.data.message === true){
-        ElMessage({
-          message: '添加成功',
-          type: 'success',
-          grouping:true
-        })
-        refresh();
-        return res.data.data.device_id
-      }else{
-        ElMessage({
-          message: '添加失败',
-          type: 'error',
-          grouping:true
-        })
-        return false
+      for(var device of res.data.data){
+        if(device.type_id === 100001){
+          gatewayList.value.push(device)
+        }
       }
     })
   }
-
-  defineExpose({addPageMethod,mhs});
+  
+  defineExpose({addPageMethod,mhs})
+  getTypeList()
 </script>
 
 <style>

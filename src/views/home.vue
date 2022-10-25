@@ -127,7 +127,7 @@
 
 <script setup>
   import { useRouter } from 'vue-router'
-  import { reactive, ref, createApp,onMounted } from 'vue'
+  import { reactive, ref, onMounted } from 'vue'
   import { ElMessage,ElMessageBox  } from 'element-plus'
   import request  from '../utils/request.js'
   import AddDevice from '@/components/addDevice.vue'
@@ -136,10 +136,13 @@
   import mqtt from 'mqtt'
 
   var date = nowDate()
+  var client
   const router = useRouter()
   const title = ref("HOME")
   const username = ref('user')
-  username.value = localStorage.getItem("username")
+  const id = ref('0000')
+  username.value = localStorage.getItem('username')
+  id.value = localStorage.getItem('id')
   const deviceList = ref([]);
   //状态
   const state = ref("normal");
@@ -149,6 +152,8 @@
   const addPageVisible = ref(false)
   const hoverVisible = ref(false)
   const controlVisible = ref(true)
+  const addPageRef = ref()
+  const controlPanelRef = ref()
   //顶部消息提示框
   const topAlert = reactive({
     visible:false,
@@ -161,11 +166,6 @@
     name:'',
     type_id:123,
   })
-
-  const addPageRef = ref()
-  const controlPanelRef = ref()
-
-  var client
   const options = {
       connectTimeout:4000,
       clientId:'user'+localStorage.getItem("id"),
@@ -173,9 +173,12 @@
       username:'user',
       password:localStorage.getItem("token")
   }
-  client = mqtt.connect("ws://127.0.0.1:8083/mqtt",options)
 
-  const mqttMsg = () => {
+  onMounted(()=>{
+      mqttConfig();
+  })
+
+  const mqttConfig = () => {
       client.on("connect", (error) => {
           console.log("连接成功");
           client.subscribe(localStorage.getItem('id'), { qos: 0 }, (error) => {
@@ -210,15 +213,12 @@
       })
   }
 
-  onMounted(()=>{
-      mqttMsg();
-  })
-
   const addDevice = () => {
     addPageVisible.value = true
     if(addPageRef.value)
       addPageRef.value.addPageMethod()
   }
+
   const controlPanel = () => {
     controlVisible.value = true
     controlPanelRef.value.setVisible()
@@ -229,15 +229,21 @@
     getDeviceList()
   }
 
-  const mqttBroadcast = (id,data)=>{
+  const mqttBroadcast = (device_id,data)=>{
     var msg = {
-      id:id,
+      id:device_id,
       data:data
     }
     client.publish(localStorage.getItem('id'),JSON.stringify(msg),{
         qos:0, rein: false
     },(error)=>{
         
+    })
+  }
+
+  const getHttplink = (device_id) => {
+    request.get(`auth/httplink/:${device_id}`).then((res) =>{
+      return res.data.data.httplink
     })
   }
 
@@ -290,8 +296,6 @@
     })
   }
 
-  getDeviceList()
-
   const destroyDevice = (device_id) => {
     ElMessageBox.confirm(
       '该操作将删除设备，确定要继续吗',
@@ -335,6 +339,9 @@
 
     })
   }
+
+  client = mqtt.connect("ws://tonwin.work:8083/mqtt",options)
+  getDeviceList()
 </script>
 
 <style>

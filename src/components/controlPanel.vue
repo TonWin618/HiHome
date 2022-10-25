@@ -17,9 +17,13 @@
     const loadEvent = () => {
         iframeWindow = iframeRef.value.contentWindow
     }
-    const emit = defineEmits(['mqttBroadcast']);
+    const emit = defineEmits(['mqttBroadcast','getHttplink']);
     const publish = (data)=>{
         emit("mqttBroadcast",props.device.id,data)
+    }
+
+    const getHttplink = (data)=>{
+        emit("getHttplink", props.device.id)
     }
 
     const props = defineProps({
@@ -52,7 +56,7 @@
                     break
                 }
                 case "getData" : {
-                    getData()
+                    getHttplink()
                     break
                 }
                 case "updateData" : {
