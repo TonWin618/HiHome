@@ -9,7 +9,7 @@ Network net;
 MqttClient mqtt;
 BluetoothSerial bt;
 
-int gatewayId;
+int gatewayId = 0;
 int userId;
 bool doConfig = true;
 bool btConnected = false;

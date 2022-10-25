@@ -51,3 +51,12 @@ bool responseBleAdd(const char* data){
     response("ble_add","true");
     return true;
 }
+
+bool responseMqttAdd(const char* data){
+    StaticJsonDocument<200> doc;
+    DeserializationError error = deserializeJson(doc,data);
+    int id = doc["id"];
+    gatewayId = id;
+    response("mqtt_add","true");
+    return true;
+}
