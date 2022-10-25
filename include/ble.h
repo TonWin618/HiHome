@@ -8,10 +8,11 @@ private:
 public:
     void config();
     void init();
-    void addNode(int id, const char* name, const char* svrUUID, const char* charUUID);
+    void addNode(int id, const char* svrUUID, const char* charUUID);
     void deleteNode(uint64_t id);
     void sendMsg(int id, const char* );
     void loop();
+    bool tryConnect();
 };
 
 #endif

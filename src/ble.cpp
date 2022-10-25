@@ -174,9 +174,8 @@ void BLE::sendMsg(int id, const char* data){
  * @param svrUUID 服务UUID
  * @param charUUID 特征UUID
  */
-void BLE::addNode(int id, const char* name, const char* svrUUID, const char* charUUID){
+void BLE::addNode(int id, const char* svrUUID, const char* charUUID){
   nodes[nodeCount].id = id;
-  strcpy(nodes[nodeCount].name,name);
   strcpy(nodes[nodeCount].svrUUID,svrUUID);
   strcpy(nodes[nodeCount].charUUID,charUUID);
   nodes[nodeCount].state = false;
@@ -192,4 +191,8 @@ void BLE::loop(){
   if(doConnect){
     connectToServer();
   }
+}
+
+bool BLE::tryConnect(){
+  return true;
 }

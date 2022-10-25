@@ -1,4 +1,5 @@
 #include <mqttClient.h>
+#include "mhs.h"
 
 extern BLE ble;
 
@@ -11,15 +12,7 @@ void MqttClient::config(const char * broker, const char* clientid, const char * 
     client.setClient(WiFiClient);
 }
 //将消息中data分发到消息中id所对应的设备
-void distribute(const char* msg){
-    StaticJsonDocument<200> doc;
-    DeserializationError error = deserializeJson(doc,msg);
-    if(!error){
-        int id = doc["id"];
-        const char* data = doc["data"];
-        ble.sendMsg(id,data);
-    }
-}
+
 //将蓝牙接口或本机的消息发送到用户主题
 void MqttClient::broadcast(int id,const char* data){
     StaticJsonDocument<200> doc;
