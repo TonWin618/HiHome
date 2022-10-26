@@ -3,7 +3,6 @@
 #include "mqttClient.h"
 #include "ble.h"
 
-
 #define GATEWAY_ID "gateway_id"
 #define USER_ID "user_id"
 #define IS_INITIALIZE "is_initialize"
@@ -13,6 +12,7 @@
 #define WIFI_PASSWORD "wifi_password"
 
 #define BLE_NAME "ble_name"
+#define BLE_NODECOUNT "ble_nodecount"
 #define BLENODE_ID "blenode_id"
 #define BLENODE_SVRUUID "blenode_srvuuid"
 #define BLENODE_CHARUUID "blenode_charuuid"
@@ -23,7 +23,7 @@
 #define MQTT_BROKER "mqtt_broker"
 #define MQTT_PORT "mqtt_port"
 
-void wifiPut(String ssid, String password);
-void wifiGet(Network* client);
+void netPut(String ssid, String password);
+void netGet(Network* client);
 void mqttPut(const char * broker, const char* clientid, const char * username, const char * password, const int port);
 void mqttGet(MqttClient* client);

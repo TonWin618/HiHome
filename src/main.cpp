@@ -10,8 +10,8 @@ Network net;
 MqttClient mqtt;
 BluetoothSerial bt;
 
-int gatewayId = 0;
-int userId;
+String gatewayId = "0";
+String userId = "0";
 bool doConfig = true;
 bool btConnected = false;
 
@@ -24,7 +24,7 @@ String prompt(String msg)
 
 void config()
 {
-    gatewayId = 0;
+    gatewayId = "0";
     bt.begin("Hi-Gateway", false);
     while (bt.hasClient() == 0);
     Serial.println("client connected to bluetooth");
@@ -37,7 +37,7 @@ void config()
         bt.println("connecting...");
         net.config(wifiName, wifiPassword);
     } while (net.init()==false);
-    wifiPut(wifiName, wifiPassword);
+    netPut(wifiName, wifiPassword);
     bt.println("Successfully connected to wifi. ");
     
     String userId;
@@ -47,10 +47,10 @@ void config()
         authCode = prompt("input verification code: ");
         char clientId[30] = "device";
         bt.println("connecting...");
-        mqtt.config("110.42.139.225",userId.c_str(),"tryconnect",authCode.c_str(),1883,net.client);
+        mqtt.config("110.42.139.225",userId.c_str(),"tryconnect",authCode.c_str(),1883);
+        mqtt.setNetwork(net.client);
     }while (mqtt.init()==false);
     mqttPut("tonwin.work", userId.c_str(), "tryconnect", authCode.c_str(),1883);
-    
     bt.println("Successfully connected to mqtt broker. ");
     mqtt.client.subscribe(userId.c_str());
     while(gatewayId == 0){
@@ -68,16 +68,19 @@ void setup()
         Serial.println("start config");
         config();
     }else{
-        net.config("QQQ", "19818308676");
+        netGet(&net);
         net.init();
-        ble.addNode(3, "0000ffe0-0000-1000-8000-00805f9b34fb", "0000ffe1-0000-1000-8000-00805f9b34fb");
-        ble.addNode(11, "e7810a71-73ae-499d-8c15-faa9aef0c3f2", "bef8d6c9-9c21-4c9e-b632-bd58c1009f9f");
+
+        ble.addNode("3", "0000ffe0-0000-1000-8000-00805f9b34fb", "0000ffe1-0000-1000-8000-00805f9b34fb");
+        ble.addNode("11", "e7810a71-73ae-499d-8c15-faa9aef0c3f2", "bef8d6c9-9c21-4c9e-b632-bd58c1009f9f");
         ble.init();
-        mqtt.config("110.42.139.225", "device6", "device", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNjY1NTc0NTYwfQ.2MMIiJG4gO95CBAYWjeg-nU4uxv17HfH3t9EO2ikkVU", 1883, net.client);
+
+        mqttGet(&mqtt);
+        mqtt.setNetwork(net.client);
         mqtt.init();
+
         mqtt.broadcast(gatewayId, "online");
     }
-    
 }
 
 void loop()

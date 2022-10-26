@@ -3,7 +3,7 @@
 
 extern BLE ble;
 
-void MqttClient::config(const char * broker, const char* clientid, const char * username, const char * password, const int port){
+void MqttClient::config(String broker,String clientid, String username, String password, uint16_t port){
     _broker = broker;
     _clientid = clientid;
     _username = username;
@@ -11,21 +11,18 @@ void MqttClient::config(const char * broker, const char* clientid, const char * 
     _port = port;
 }
 
-void MqttClient::config(const char * broker, const char* clientid, const char * username, const char * password, const int port, Client& WiFiClient){
-    config(broker,clientid,username,password,port);
+void MqttClient::setNetwork(Client& WiFiClient){
     client.setClient(WiFiClient);
 }
 
-//将消息中data分发到消息中id所对应的设备
-
 //将蓝牙接口或本机的消息发送到用户主题
-void MqttClient::broadcast(int id,const char* data){
+void MqttClient::broadcast(String id,String data){
     StaticJsonDocument<200> doc;
     char msg[200];
     doc["id"] = id;
     doc["data"] = data;
     serializeJson(doc,msg,200);
-    client.publish(_topic,msg);
+    client.publish(_topic.c_str(),msg);
 }
 
 //接收到mqtt消息时触发
@@ -40,11 +37,11 @@ void callback(char *topic, byte *payload, unsigned int length) {
 
 //mqtt初始化
 bool MqttClient::init(){
-    client.setServer(_broker, _port);
+    client.setServer(_broker.c_str(), _port);
     client.setCallback(callback);
     while (!client.connected()) {
         Serial.printf("The client connects to the public mqtt broker\n");
-        if (client.connect(_clientid, _username, _password)) {
+        if (client.connect(_clientid.c_str(), _username.c_str(), _password.c_str())) {
             Serial.println("Public emqx mqtt broker connected");
         } else {
             Serial.print("failed with state ");

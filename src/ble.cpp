@@ -26,7 +26,7 @@ static void notifyCallback(
   uint8_t* pData,
   size_t length,
   bool isNotify) {
-    int id;
+    String id;
     for(int i = 0; i < nodeCount;i++){
       if(nodes[i].pCharacteristics->getUUID().toString() == pBLERemoteCharacteristic->getUUID().toString()){
         id = nodes[i].id;
@@ -114,12 +114,12 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
     if (advertisedDevice.haveServiceUUID()){
       BLEUUID uuid;
       for(int j =0; j < nodeCount; j++){
-        uuid = BLEUUID(nodes[j].svrUUID);
+        uuid = BLEUUID(nodes[j].svrUUID.c_str());
         if(advertisedDevice.isAdvertisingService(uuid)){
           BLEDevice::getScan()->stop();
           nodeIndex = j;
           curSvrUUID = uuid;
-          curCharUUID = BLEUUID(nodes[nodeIndex].charUUID);
+          curCharUUID = BLEUUID(nodes[nodeIndex].charUUID.c_str());
           nodes[nodeIndex].pDevice = new BLEAdvertisedDevice(advertisedDevice);
           doConnect = true;
         }
@@ -143,13 +143,12 @@ void BLE::init(){
   pBLEScan->start(5, false);
 }
 
-void BLE::sendMsg(int id, const char* data){
+void BLE::sendMsg(String id, String data){
   for(int i = 0; i<nodeCount; i++){
     if(nodes[i].id == id){
       Serial.print(data);
-      int count = strlen(data);
-      nodes[i].pCharacteristics->writeValue((uint8_t*)data, count);
-      Serial.printf("BLE id:%d tx:%s lenth:%d\n",id, data, count);
+      nodes[i].pCharacteristics->writeValue((uint8_t*)data.c_str(), data.length());
+      Serial.printf("BLE id:%d tx:%s lenth:%d\n",id, data, data.length());
     }
   }
 }
@@ -162,10 +161,10 @@ void BLE::sendMsg(int id, const char* data){
  * @param svrUUID 服务UUID
  * @param charUUID 特征UUID
  */
-void BLE::addNode(int id, const char* svrUUID, const char* charUUID){
+void BLE::addNode(String id, String svrUUID, String charUUID){
   nodes[nodeCount].id = id;
-  strcpy(nodes[nodeCount].svrUUID,svrUUID);
-  strcpy(nodes[nodeCount].charUUID,charUUID);
+  nodes[nodeCount].svrUUID = svrUUID;
+  nodes[nodeCount].charUUID = charUUID;
   nodes[nodeCount].state = false;
   nodeCount++;
   Serial.println("add a new node");

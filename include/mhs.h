@@ -2,4 +2,4 @@
 #include "ble.h"
 #include "ArduinoJson.h"
 
-void distribute(const char* msg);
+void distribute(String msg);
