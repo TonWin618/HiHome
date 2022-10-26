@@ -3,7 +3,7 @@
 int timeOut = 5000;//连接超时时间，单位ms
 
 //设置wifi名称和密码
-void Network::set(String ssid, String password){
+void Network::config(String ssid, String password){
 	_ssid = ssid;
 	_password = password;
 }

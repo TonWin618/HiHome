@@ -12,7 +12,7 @@ private:
 public:
     WiFiClient client;
 	bool init();
-    void set(String ssid, String password);
+    void config(String ssid, String password);
 };
 
 #endif

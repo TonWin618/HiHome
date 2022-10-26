@@ -1,21 +1,9 @@
 #include "ble.h"
-#include "BLEDevice.h"
-#include "mqttClient.h"
 
 #define MAX_CONNECT_NUM 5
 
 extern MqttClient mqtt;
 
-struct Node{
-    int  id;
-    char     name[30];
-    char     svrUUID[40];
-    char     charUUID[40];
-    bool      state;
-    BLEClient* pclient;
-    BLERemoteCharacteristic* pCharacteristics;
-    BLEAdvertisedDevice* pDevice;
-};
 Node nodes[MAX_CONNECT_NUM];
 static BLEScan* pBLEScan;
 static BLEUUID curSvrUUID;

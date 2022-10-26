@@ -3,6 +3,7 @@
 #include <network.h>
 #include <ble.h>
 #include <BluetoothSerial.h>
+#include <storage.h>
 
 BLE ble;
 Network net;
@@ -23,6 +24,7 @@ String prompt(String msg)
 
 void config()
 {
+    gatewayId = 0;
     bt.begin("Hi-Gateway", false);
     while (bt.hasClient() == 0);
     Serial.println("client connected to bluetooth");
@@ -33,24 +35,28 @@ void config()
         wifiName = prompt("Please input WiFi name: ");
         wifiPassword = prompt("Please input WiFi password: ");
         bt.println("connecting...");
-        net.set(wifiName, wifiPassword);
+        net.config(wifiName, wifiPassword);
     } while (net.init()==false);
+    wifiPut(wifiName, wifiPassword);
     bt.println("Successfully connected to wifi. ");
-
+    
     String userId;
-    String deviceId;
     String authCode;
     do{
         userId = prompt("input user id: ");
-        deviceId = prompt("input device id: ");
         authCode = prompt("input verification code: ");
         char clientId[30] = "device";
         bt.println("connecting...");
-        mqtt.config("110.42.139.225",strcat(clientId,deviceId.c_str()),"gateway",authCode.c_str(),1883,net.client);
+        mqtt.config("110.42.139.225",userId.c_str(),"tryconnect",authCode.c_str(),1883,net.client);
     }while (mqtt.init()==false);
-    mqtt.client.subscribe(userId.c_str());
-    mqtt.broadcast(deviceId.toInt(),"{status:online}");
+    mqttPut("tonwin.work", userId.c_str(), "tryconnect", authCode.c_str(),1883);
+    
     bt.println("Successfully connected to mqtt broker. ");
+    mqtt.client.subscribe(userId.c_str());
+    while(gatewayId == 0){
+        mqtt.client.loop();
+    }
+    
     bt.println("config successfully! ");
 }
 
@@ -62,7 +68,7 @@ void setup()
         Serial.println("start config");
         config();
     }else{
-        net.set("QQQ", "19818308676");
+        net.config("QQQ", "19818308676");
         net.init();
         ble.addNode(3, "0000ffe0-0000-1000-8000-00805f9b34fb", "0000ffe1-0000-1000-8000-00805f9b34fb");
         ble.addNode(11, "e7810a71-73ae-499d-8c15-faa9aef0c3f2", "bef8d6c9-9c21-4c9e-b632-bd58c1009f9f");

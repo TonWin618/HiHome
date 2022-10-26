@@ -14,27 +14,6 @@ bool response(const char* resType, const char* resVal){
     return true;
 }
 
-void distribute(const char* msg){
-    StaticJsonDocument<200> doc;
-    DeserializationError error = deserializeJson(doc,msg);
-    if(!error){
-        int id = doc["id"];
-        const char* data = doc["data"];
-        if(id == gatewayId){
-            const char* resType = doc["data"]["response"];
-            if(resType == "ble_tryconnect"){
-                responseBleTryConnect(data);
-            }else if(resType == "ble_add"){
-                responseBleAdd(data);
-            }
-        }else{
-            ble.sendMsg(id,data);
-        }
-    }
-}
-
-
-
 bool responseBleTryConnect(const char* data){
     if(ble.tryConnect()){
         response("ble_tryconnect","true");
@@ -60,3 +39,25 @@ bool responseMqttAdd(const char* data){
     response("mqtt_add","true");
     return true;
 }
+
+void distribute(const char* msg){
+    StaticJsonDocument<200> doc;
+    DeserializationError error = deserializeJson(doc,msg);
+    if(!error){
+        int id = doc["id"];
+        const char* data = doc["data"];
+        if(id == gatewayId){
+            const char* resType = doc["data"]["response"];
+            if(resType == "ble_tryconnect"){
+                responseBleTryConnect(data);
+            }else if(resType == "ble_add"){
+                responseBleAdd(data);
+            }
+        }else{
+            ble.sendMsg(id,data);
+        }
+    }
+}
+
+
+

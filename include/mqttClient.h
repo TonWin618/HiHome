@@ -17,6 +17,7 @@ private:
     int _port = 1883;
 public:
     PubSubClient client;
+    void MqttClient::config(const char * broker, const char* clientid, const char * username, const char * password, const int port);
     void config(const char * broker, const char* clientid, const char * username, const char * password, const int port, Client& WiFiClient);
     bool init();
     void broadcast(int id, const char* data);

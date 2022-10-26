@@ -1,6 +1,18 @@
 #ifndef BLE_H
 #define BLE_H
 #include "arduino.h"
+#include "BLEDevice.h"
+#include "mqttClient.h"
+
+struct Node{
+    int  id;
+    char     svrUUID[40];
+    char     charUUID[40];
+    bool      state;
+    BLEClient* pclient;
+    BLERemoteCharacteristic* pCharacteristics;
+    BLEAdvertisedDevice* pDevice;
+};
 
 class BLE{
 private:

@@ -3,14 +3,19 @@
 
 extern BLE ble;
 
-void MqttClient::config(const char * broker, const char* clientid, const char * username, const char * password, const int port, Client& WiFiClient){
+void MqttClient::config(const char * broker, const char* clientid, const char * username, const char * password, const int port){
     _broker = broker;
     _clientid = clientid;
     _username = username;
     _password = password;
     _port = port;
+}
+
+void MqttClient::config(const char * broker, const char* clientid, const char * username, const char * password, const int port, Client& WiFiClient){
+    config(broker,clientid,username,password,port);
     client.setClient(WiFiClient);
 }
+
 //将消息中data分发到消息中id所对应的设备
 
 //将蓝牙接口或本机的消息发送到用户主题
