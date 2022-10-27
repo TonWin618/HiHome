@@ -14,7 +14,7 @@ private:
     String _clientid;
     String _username;
     String _password;
-    uint16_t _port = 1883;
+    uint16_t _port;
 public:
     PubSubClient client;
     void config(String broker,String clientid, String username, String password, uint16_t port);

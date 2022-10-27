@@ -5,7 +5,7 @@
 
 #define GATEWAY_ID "gateway_id"
 #define USER_ID "user_id"
-#define IS_INITIALIZE "is_initialize"
+#define IS_INITIALIZED "is_initialize"
 #define AUTHCODE "authcode"
 
 #define WIFI_SSID "wifi_ssid"
@@ -23,7 +23,15 @@
 #define MQTT_BROKER "mqtt_broker"
 #define MQTT_PORT "mqtt_port"
 
+void initPut(bool isInit);
+void initGet(bool* isInit);
+
+void idPut(String id);
+void idGet(String* id);
+void uidPut(String uid);
+void uidGet(String* uid);
+
 void netPut(String ssid, String password);
 void netGet(Network* client);
-void mqttPut(const char * broker, const char* clientid, const char * username, const char * password, const int port);
+void mqttPut(String broker, String clientid, String username, String password, uint16_t port);
 void mqttGet(MqttClient* client);
