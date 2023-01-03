@@ -1,0 +1,55 @@
+{
+  "name": "Hi",
+  "version": "1.0.0",
+  "description": "Hi",
+  "private": true,
+  "egg": {
+    "declarations": true
+  },
+  "dependencies": {
+    "egg": "^2",
+    "egg-cors": "^2.2.3",
+    "egg-emqtt": "^1.0.0",
+    "egg-jwt": "^3.1.7",
+    "egg-mqtt": "^1.0.1",
+    "egg-scripts": "^2",
+    "egg-sequelize": "^6.0.0",
+    "md5-node": "^1.0.1",
+    "mqtt": "^4.3.7",
+    "mysql2": "^2.3.3"
+  },
+  "devDependencies": {
+    "autod": "^3",
+    "autod-egg": "^1",
+    "egg-bin": "^4",
+    "egg-ci": "^2",
+    "egg-mock": "^4",
+    "eslint": "^8",
+    "eslint-config-egg": "^12"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "scripts": {
+    "start": "egg-scripts start --daemon --title=egg-server-Hi",
+    "stop": "egg-scripts stop --title=egg-server-Hi",
+    "dev": "egg-bin dev",
+    "debug": "egg-bin debug",
+    "test": "npm run lint -- --fix && npm run test-local",
+    "test-local": "egg-bin test",
+    "cov": "egg-bin cov",
+    "lint": "eslint .",
+    "ci": "npm run lint && npm run cov",
+    "autod": "autod"
+  },
+  "ci": {
+    "version": "16",
+    "type": "github"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "author": "TonWin",
+  "license": "MIT"
+}
