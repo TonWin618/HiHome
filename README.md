@@ -1,4 +1,11 @@
-# client
+# Hi-Webclient
+
+## Project presentation
+https://www.bilibili.com/video/BV1uk4y1v7fC/
+
+## UI Design
+https://www.figma.com/community/file/1224727360969134216/HiHomeWebUI
+![UI](image.png)
 
 ## Project setup
 ```
