@@ -1,6 +1,8 @@
-# Hi
+# Hi-WebServer
+The back-end of the Hi Smart Home project (a simple IoT platform).
 
-Hi
+## Project presentation
+https://www.bilibili.com/video/BV1uk4y1v7fC
 
 ## QuickStart
 
