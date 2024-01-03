@@ -1,20 +1,24 @@
 #include <network.h>
 
+int timeOut = 5000;//连接超时时间，单位ms
+
 //设置wifi名称和密码
-void Network::set(String ssid, String password){
+void Network::config(String ssid, String password){
 	_ssid = ssid;
 	_password = password;
 }
 
 //连接wifi
-void Network::init()
+bool Network::init()
 {
+	int timeWait = 0;
     Serial.println("scan start");
 	int n = WiFi.scanNetworks();
 	Serial.println("scan done");
 	if (n == 0)
 	{
 		Serial.println("no networks found");
+		return false;
 	}
 	else
 	{
@@ -42,10 +46,16 @@ void Network::init()
 	while (WiFi.status() != WL_CONNECTED)
 	{
 		delay(500);
+		timeWait += 500;
 		Serial.print(".");
+		if(timeWait > timeOut){
+			Serial.println("WiFi connection timeout");
+			return false;
+		}
 	}
 	Serial.println("");
 	Serial.println("WiFi connected");
 	Serial.println("IP address: ");
 	Serial.println(WiFi.localIP());
+	return true;
 }

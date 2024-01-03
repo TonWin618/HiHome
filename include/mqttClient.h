@@ -9,17 +9,18 @@
 
 class MqttClient{
 private:
-    const char *_broker;
-    const char * _topic = "3";
-    const char *_clientid;
-    const char *_username;
-    const char *_password;
-    int _port = 1883;
+    String _broker;
+    String  _topic;
+    String _clientid;
+    String _username;
+    String _password;
+    uint16_t _port;
 public:
     PubSubClient client;
-    void config(const char * broker, const char* clientid, const char * username, const char * password, const int port, Client& WiFiClient);
-    void init();
-    void broadcast(int id, const char* data);
+    void config(String broker,String clientid, String username, String password, uint16_t port);
+    void setNetwork(Client& WiFiClient);
+    bool init();
+    void broadcast(String id, String data);
 };
 
 #endif
