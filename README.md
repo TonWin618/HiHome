@@ -72,4 +72,4 @@ A gateway based on ESP32 that supports MQTT and Bluetooth communication.
 
 After compiling the code, it can be burned onto the ESP32.
 
-![show](D:/Projects/HiHome/README.assets/gateway.jpg)
+![show](img/gateway.jpg)
